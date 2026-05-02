@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel & Cafe Billing Software</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:#f0f2f5;height:100vh;overflow:hidden}
+  .app{display:grid;grid-template-columns:1fr 340px;height:100vh;overflow:hidden}
+  .left{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #e0e0e0;background:#fff}
+  .header{background:#fff;padding:12px 16px;border-bottom:1px solid #e0e0e0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .hotel-name{font-size:17px;font-weight:600;color:#1a1a1a}
+  .bill-meta{font-size:11px;color:#888}
+  .badge{font-size:11px;padding:3px 8px;border-radius:12px;font-weight:600;background:#e8f5e9;color:#2e7d32}
+  .search-bar{flex:1;min-width:160px}
+  .search-bar input{width:100%;padding:7px 12px;border:1px solid #ddd;border-radius:8px;background:#f8f8f8;color:#1a1a1a;font-size:13px;outline:none}
+  .search-bar input:focus{border-color:#1976d2;background:#fff}
+  .top-bar-btn{padding:6px 14px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#555;font-size:12px;cursor:pointer;font-weight:500}
+  .top-bar-btn:hover{background:#f5f5f5}
+  .cats{display:flex;gap:6px;padding:10px 16px;overflow-x:auto;background:#fff;border-bottom:1px solid #e0e0e0}
+  .cats::-webkit-scrollbar{height:3px}.cats::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px}
+  .cat-btn{padding:5px 14px;border-radius:20px;border:1px solid #ddd;background:#fff;color:#666;font-size:12px;cursor:pointer;white-space:nowrap;transition:all 0.15s;font-weight:500}
+  .cat-btn.active{background:#1976d2;color:#fff;border-color:#1976d2}
+  .items-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:12px;background:#f8f9fa}
+  .items-grid::-webkit-scrollbar{width:4px}.items-grid::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px}
+  .item-card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:10px;cursor:pointer;transition:all 0.15s;user-select:none}
+  .item-card:hover{border-color:#1976d2;box-shadow:0 2px 8px rgba(25,118,210,0.12);transform:translateY(-1px)}
+  .item-card:active{transform:scale(0.97)}
+  .veg-indicator{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;border:1.5px solid;margin-right:4px;vertical-align:middle;flex-shrink:0}
+  .veg-indicator.veg{border-color:#2e7d32}.veg-indicator.nveg{border-color:#c62828}
+  .veg-dot{width:7px;height:7px;border-radius:50%}
+  .veg .veg-dot{background:#2e7d32}.nveg .veg-dot{background:#c62828}
+  .item-cat-label{font-size:10px;color:#aaa;vertical-align:middle}
+  .item-name{font-size:13px;font-weight:600;color:#1a1a1a;margin-top:5px;line-height:1.3}
+  .item-price{font-size:14px;font-weight:700;color:#1976d2;margin-top:4px}
+  .right{display:flex;flex-direction:column;background:#fff;overflow:hidden}
+  .order-header{padding:12px 16px;border-bottom:1px solid #e0e0e0;display:flex;align-items:center;justify-content:space-between;background:#fff}
+  .order-title{font-size:15px;font-weight:600;color:#1a1a1a}
+  .table-select select{padding:5px 8px;border:1px solid #ddd;border-radius:8px;background:#f8f8f8;color:#1a1a1a;font-size:12px;cursor:pointer}
+  .order-items{flex:1;overflow-y:auto;padding:10px;background:#fafafa}
+  .order-items::-webkit-scrollbar{width:4px}.order-items::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px}
+  .empty-order{text-align:center;color:#bbb;font-size:13px;padding:50px 0;line-height:2}
+  .order-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:#fff;margin-bottom:6px;border:1px solid #f0f0f0}
+  .order-item-name{flex:1;font-size:13px;color:#1a1a1a;line-height:1.3}
+  .order-item-unit{font-size:11px;color:#aaa}
+  .qty-ctrl{display:flex;align-items:center;gap:4px}
+  .qty-btn{width:24px;height:24px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:#333;line-height:1;transition:background 0.1s}
+  .qty-btn:hover{background:#1976d2;color:#fff;border-color:#1976d2}
+  .qty-num{font-size:13px;font-weight:600;min-width:20px;text-align:center;color:#1a1a1a}
+  .item-total{font-size:13px;font-weight:600;min-width:56px;text-align:right;color:#1a1a1a}
+  .bill-summary{padding:12px 16px;border-top:1px solid #e0e0e0;background:#fff}
+  .bill-row{display:flex;justify-content:space-between;font-size:13px;color:#666;margin-bottom:5px}
+  .bill-total{display:flex;justify-content:space-between;font-size:17px;font-weight:700;color:#1a1a1a;padding-top:8px;border-top:2px solid #e0e0e0;margin-top:6px}
+  .disc-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;background:#f8f9fa;padding:6px 8px;border-radius:8px}
+  .disc-row input{width:65px;padding:4px 8px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#1a1a1a;font-size:12px;outline:none}
+  .disc-row select{padding:4px 6px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#1a1a1a;font-size:12px}
+  .disc-row label{font-size:12px;color:#666;font-weight:500}
+  .actions{display:flex;gap:8px;margin-top:10px}
+  .btn{padding:9px 14px;border-radius:8px;border:1px solid #ddd;background:#fff;color:#333;font-size:13px;cursor:pointer;flex:1;font-weight:600;transition:all 0.15s}
+  .btn:hover{background:#f5f5f5}
+  .btn-primary{background:#1976d2;color:#fff;border-color:#1976d2}
+  .btn-primary:hover{background:#1565c0}
+  .btn-danger{background:#ffebee;color:#c62828;border-color:#ffcdd2}
+  .btn-danger:hover{background:#ffcdd2}
+  .btn-success{background:#e8f5e9;color:#2e7d32;border-color:#c8e6c9}
+  .btn-success:hover{background:#c8e6c9}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:100}
+  .modal-box{background:#fff;border-radius:14px;padding:22px;width:400px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+  .modal-box::-webkit-scrollbar{width:4px}.modal-box::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px}
+  .modal-title{font-size:17px;font-weight:700;margin-bottom:16px;color:#1a1a1a;padding-bottom:10px;border-bottom:1px solid #eee}
+  .print-area{font-family:'Courier New',monospace;font-size:12px;color:#1a1a1a;line-height:1.7;background:#fafafa;padding:14px;border-radius:8px;border:1px solid #eee;white-space:pre}
+  .hidden{display:none}
+  .admin-field{margin-bottom:12px}
+  .admin-field label{font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500}
+  .admin-field input,.admin-field select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;background:#f8f8f8;color:#1a1a1a;font-size:13px;outline:none}
+  .admin-field input:focus,.admin-field select:focus{border-color:#1976d2;background:#fff}
+  .notify{position:fixed;bottom:24px;right:24px;background:#323232;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none}
+  .sales-card{background:#e3f2fd;border-radius:10px;padding:12px;margin-bottom:14px;border:1px solid #bbdefb}
+  .sales-card .label{font-size:11px;color:#1976d2;font-weight:600;margin-bottom:4px}
+  .sales-card .value{font-size:22px;font-weight:700;color:#0d47a1}
+  .hist-item{display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid #f5f5f5;color:#555}
+  .hist-item span:last-child{font-weight:600;color:#1a1a1a}
+  .section-title{font-size:13px;font-weight:700;margin-bottom:8px;color:#1a1a1a}
+  .add-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media print{
+    body{overflow:visible;height:auto}
+    .app,.left,.right,.header,.cats,.order-header,.bill-summary,.actions,.top-bar-btn,.modal-overlay{display:none!important}
+    .print-only{display:block!important;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;color:#000;padding:20px}
+  }
+  .print-only{display:none}
+</style>
+</head>
+<body>
+
+<div class="app" id="mainApp">
+  <!-- LEFT: Menu -->
+  <div class="left">
+    <div class="header">
+      <div>
+        <div class="hotel-name" id="hotelNameDisplay">Sri Murugan Hotel &amp; Cafe</div>
+        <div class="bill-meta" id="billMetaDisplay">Bill #001 &nbsp;|&nbsp; GST: 33AABCS1429B1Z4</div>
+      </div>
+      <span class="badge">&#x25cf; OPEN</span>
+      <div class="search-bar"><input type="text" id="searchInput" placeholder="&#128269; Search items..." oninput="filterItems()"></div>
+      <button class="top-bar-btn" onclick="openAdmin()">&#9881; Admin</button>
+    </div>
+    <div class="cats" id="catBar"></div>
+    <div class="items-grid" id="itemsGrid"></div>
+  </div>
+
+  <!-- RIGHT: Order -->
+  <div class="right">
+    <div class="order-header">
+      <div class="order-title">&#128203; Current Order</div>
+      <div>
+        <select id="tableNo">
+          <option>Takeaway</option>
+          <option>Table 1</option><option>Table 2</option><option>Table 3</option>
+          <option>Table 4</option><option>Table 5</option><option>Table 6</option>
+          <option>Table 7</option><option>Table 8</option><option>Table 9</option><option>Table 10</option>
+        </select>
+      </div>
+    </div>
+    <div class="order-items" id="orderItems">
+      <div class="empty-order">&#128722;<br>No items added yet.<br>Tap any item to add.</div>
+    </div>
+    <div class="bill-summary">
+      <div class="disc-row">
+        <label>Discount:</label>
+        <input type="number" id="discVal" placeholder="0" min="0" oninput="renderSummary()">
+        <select id="discType" onchange="renderSummary()">
+          <option value="flat">&#8377; Flat</option>
+          <option value="pct">% Percent</option>
+        </select>
+      </div>
+      <div class="bill-row"><span>Subtotal</span><span id="subtotal">&#8377;0.00</span></div>
+      <div class="bill-row"><span>Discount</span><span id="discAmt" style="color:#c62828">&#8377;0.00</span></div>
+      <div class="bill-row"><span>GST (5%)</span><span id="gstAmt">&#8377;0.00</span></div>
+      <div class="bill-total"><span>Grand Total</span><span id="grandTotal" style="color:#1976d2">&#8377;0.00</span></div>
+      <div class="actions">
+        <button class="btn btn-danger" onclick="clearOrder()">&#10005; Clear</button>
+        <button class="btn btn-success" onclick="printBill()">&#128438; Print</button>
+        <button class="btn btn-primary" onclick="settleBill()">&#10003; Settle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Print Modal -->
+<div class="modal-overlay hidden" id="printModal">
+  <div class="modal-box" style="width:440px">
+    <div class="modal-title">&#128438; Bill Preview</div>
+    <div class="print-area" id="printContent"></div>
+    <div class="actions" style="margin-top:14px">
+      <button class="btn" onclick="closePrint()">&#10005; Close</button>
+      <button class="btn btn-primary" onclick="doPrint()">&#128438; Print / Save PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Modal -->
+<div class="modal-overlay hidden" id="adminModal">
+  <div class="modal-box">
+    <div class="modal-title">&#9881; Admin Panel</div>
+    <div id="adminContent"></div>
+    <button class="btn" style="margin-top:12px;width:100%" onclick="closeAdmin()">&#10005; Close</button>
+  </div>
+</div>
+
+<div class="notify" id="notify"></div>
+
+<!-- Print only area -->
+<div class="print-only" id="printOnlyArea"></div>
+
+<script>
+const DEFAULT_MENU = [
+  {id:1,name:"Idli (2 pcs)",cat:"Breakfast",price:40,veg:true},
+  {id:2,name:"Dosa",cat:"Breakfast",price:60,veg:true},
+  {id:3,name:"Masala Dosa",cat:"Breakfast",price:80,veg:true},
+  {id:4,name:"Rava Dosa",cat:"Breakfast",price:70,veg:true},
+  {id:5,name:"Pongal",cat:"Breakfast",price:60,veg:true},
+  {id:6,name:"Upma",cat:"Breakfast",price:50,veg:true},
+  {id:7,name:"Poori (2 pcs)",cat:"Breakfast",price:70,veg:true},
+  {id:8,name:"Chapati (2 pcs)",cat:"Breakfast",price:60,veg:true},
+  {id:9,name:"Parotta",cat:"Breakfast",price:30,veg:true},
+  {id:10,name:"Egg Parotta",cat:"Breakfast",price:70,veg:false},
+  {id:11,name:"Vada (2 pcs)",cat:"Breakfast",price:50,veg:true},
+  {id:12,name:"Sambar Idli",cat:"Breakfast",price:60,veg:true},
+  {id:13,name:"Set Dosa",cat:"Breakfast",price:80,veg:true},
+  {id:14,name:"Appam",cat:"Breakfast",price:50,veg:true},
+  {id:15,name:"Bread Omelette",cat:"Breakfast",price:80,veg:false},
+  {id:16,name:"Egg Bhurji",cat:"Breakfast",price:90,veg:false},
+  {id:17,name:"Pesarattu",cat:"Breakfast",price:70,veg:true},
+  {id:18,name:"Uttapam",cat:"Breakfast",price:80,veg:true},
+  {id:19,name:"Kichadi",cat:"Breakfast",price:60,veg:true},
+  {id:20,name:"Boiled Eggs",cat:"Breakfast",price:30,veg:false},
+
+  {id:21,name:"Meals (Full)",cat:"Lunch",price:150,veg:true},
+  {id:22,name:"Veg Rice",cat:"Lunch",price:100,veg:true},
+  {id:23,name:"Chicken Biriyani",cat:"Lunch",price:200,veg:false},
+  {id:24,name:"Mutton Biriyani",cat:"Lunch",price:260,veg:false},
+  {id:25,name:"Egg Fried Rice",cat:"Lunch",price:130,veg:false},
+  {id:26,name:"Veg Fried Rice",cat:"Lunch",price:120,veg:true},
+  {id:27,name:"Chicken Fried Rice",cat:"Lunch",price:160,veg:false},
+  {id:28,name:"Sambar Rice",cat:"Lunch",price:80,veg:true},
+  {id:29,name:"Curd Rice",cat:"Lunch",price:70,veg:true},
+  {id:30,name:"Rasam Rice",cat:"Lunch",price:70,veg:true},
+  {id:31,name:"Lemon Rice",cat:"Lunch",price:80,veg:true},
+  {id:32,name:"Tomato Rice",cat:"Lunch",price:80,veg:true},
+  {id:33,name:"Fish Curry Rice",cat:"Lunch",price:180,veg:false},
+  {id:34,name:"Prawn Rice",cat:"Lunch",price:220,veg:false},
+  {id:35,name:"Veg Pulao",cat:"Lunch",price:130,veg:true},
+  {id:36,name:"Chicken Curry + Rice",cat:"Lunch",price:170,veg:false},
+  {id:37,name:"Dal Fry + Roti",cat:"Lunch",price:120,veg:true},
+  {id:38,name:"Paneer Butter Masala",cat:"Lunch",price:180,veg:true},
+  {id:39,name:"Egg Rice",cat:"Lunch",price:120,veg:false},
+  {id:40,name:"Mini Meals",cat:"Lunch",price:100,veg:true},
+
+  {id:41,name:"Chicken Kothu Parotta",cat:"Dinner",price:180,veg:false},
+  {id:42,name:"Egg Kothu Parotta",cat:"Dinner",price:120,veg:false},
+  {id:43,name:"Veg Kothu Parotta",cat:"Dinner",price:100,veg:true},
+  {id:44,name:"Chicken Curry",cat:"Dinner",price:200,veg:false},
+  {id:45,name:"Mutton Curry",cat:"Dinner",price:280,veg:false},
+  {id:46,name:"Fish Fry",cat:"Dinner",price:160,veg:false},
+  {id:47,name:"Prawn Masala",cat:"Dinner",price:240,veg:false},
+  {id:48,name:"Palak Paneer",cat:"Dinner",price:180,veg:true},
+  {id:49,name:"Butter Naan",cat:"Dinner",price:50,veg:true},
+  {id:50,name:"Tandoori Roti",cat:"Dinner",price:40,veg:true},
+  {id:51,name:"Chicken Tikka",cat:"Dinner",price:280,veg:false},
+  {id:52,name:"Veg Biryani",cat:"Dinner",price:160,veg:true},
+  {id:53,name:"Mutton Biryani (Full)",cat:"Dinner",price:320,veg:false},
+  {id:54,name:"Chicken 65",cat:"Dinner",price:220,veg:false},
+  {id:55,name:"Gobi Manchurian",cat:"Dinner",price:160,veg:true},
+  {id:56,name:"Chilli Chicken",cat:"Dinner",price:240,veg:false},
+  {id:57,name:"Egg Curry",cat:"Dinner",price:130,veg:false},
+  {id:58,name:"Veg Curry + Roti",cat:"Dinner",price:120,veg:true},
+  {id:59,name:"Pepper Chicken",cat:"Dinner",price:250,veg:false},
+  {id:60,name:"Kheema Parotta",cat:"Dinner",price:150,veg:false},
+
+  {id:61,name:"Filter Coffee",cat:"Beverages",price:30,veg:true},
+  {id:62,name:"Masala Tea",cat:"Beverages",price:25,veg:true},
+  {id:63,name:"Plain Tea",cat:"Beverages",price:20,veg:true},
+  {id:64,name:"Cold Coffee",cat:"Beverages",price:80,veg:true},
+  {id:65,name:"Mango Lassi",cat:"Beverages",price:70,veg:true},
+  {id:66,name:"Rose Milk",cat:"Beverages",price:50,veg:true},
+  {id:67,name:"Badam Milk",cat:"Beverages",price:70,veg:true},
+  {id:68,name:"Lemon Juice",cat:"Beverages",price:40,veg:true},
+  {id:69,name:"Orange Juice",cat:"Beverages",price:60,veg:true},
+  {id:70,name:"Watermelon Juice",cat:"Beverages",price:60,veg:true},
+  {id:71,name:"Buttermilk",cat:"Beverages",price:30,veg:true},
+  {id:72,name:"Coconut Water",cat:"Beverages",price:50,veg:true},
+  {id:73,name:"Tender Coconut Shake",cat:"Beverages",price:80,veg:true},
+  {id:74,name:"Banana Shake",cat:"Beverages",price:70,veg:true},
+  {id:75,name:"Strawberry Shake",cat:"Beverages",price:80,veg:true},
+  {id:76,name:"Pineapple Juice",cat:"Beverages",price:60,veg:true},
+  {id:77,name:"Mojito",cat:"Beverages",price:90,veg:true},
+  {id:78,name:"Green Tea",cat:"Beverages",price:40,veg:true},
+  {id:79,name:"Horlicks",cat:"Beverages",price:50,veg:true},
+  {id:80,name:"Bournvita",cat:"Beverages",price:50,veg:true},
+
+  {id:81,name:"Samosa (2 pcs)",cat:"Snacks",price:40,veg:true},
+  {id:82,name:"Onion Pakoda",cat:"Snacks",price:60,veg:true},
+  {id:83,name:"Bread Bajji",cat:"Snacks",price:30,veg:true},
+  {id:84,name:"Egg Puff",cat:"Snacks",price:30,veg:false},
+  {id:85,name:"Veg Puff",cat:"Snacks",price:25,veg:true},
+  {id:86,name:"Chicken Puff",cat:"Snacks",price:40,veg:false},
+  {id:87,name:"French Fries",cat:"Snacks",price:90,veg:true},
+  {id:88,name:"Masala Peanuts",cat:"Snacks",price:40,veg:true},
+  {id:89,name:"Popcorn",cat:"Snacks",price:50,veg:true},
+  {id:90,name:"Noodles",cat:"Snacks",price:80,veg:true},
+  {id:91,name:"Maggi",cat:"Snacks",price:70,veg:true},
+  {id:92,name:"Egg Noodles",cat:"Snacks",price:100,veg:false},
+  {id:93,name:"Chicken Noodles",cat:"Snacks",price:130,veg:false},
+  {id:94,name:"Veg Sandwich",cat:"Snacks",price:70,veg:true},
+  {id:95,name:"Chicken Sandwich",cat:"Snacks",price:120,veg:false},
+  {id:96,name:"Aloo Chaat",cat:"Snacks",price:60,veg:true},
+  {id:97,name:"Pani Puri",cat:"Snacks",price:50,veg:true},
+  {id:98,name:"Bhel Puri",cat:"Snacks",price:60,veg:true},
+  {id:99,name:"Ice Cream (2 scoops)",cat:"Snacks",price:80,veg:true},
+  {id:100,name:"Gulab Jamun (2 pcs)",cat:"Snacks",price:50,veg:true}
+];
+
+let items = JSON.parse(localStorage.getItem('menuItems_v2') || 'null') || DEFAULT_MENU;
+let order = [];
+let currentCat = 'All';
+let billCounter = parseInt(localStorage.getItem('billCounter_v2') || '1');
+let settings = JSON.parse(localStorage.getItem('billingSettings_v2') || '{"name":"Sri Murugan Hotel & Cafe","gst":"33AABCS1429B1Z4","phone":""}');
+
+function saveItems(){ localStorage.setItem('menuItems_v2', JSON.stringify(items)); }
+function saveSettings(){ localStorage.setItem('billingSettings_v2', JSON.stringify(settings)); }
+
+function getBillNo(){ return 'B' + String(billCounter).padStart(3,'0'); }
+
+// ── Render categories ──────────────────────────────────────
+function renderCats(){
+  const cats = ['All', ...new Set(items.map(i => i.cat))];
+  document.getElementById('catBar').innerHTML = cats.map(c =>
+    `<button class="cat-btn${c===currentCat?' active':''}" onclick="selectCat('${c}')">${c}</button>`
+  ).join('');
+}
+function selectCat(c){ currentCat = c; renderCats(); renderItems(); }
+
+// ── Render items ───────────────────────────────────────────
+function filterItems(){ renderItems(); }
+function renderItems(){
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = items.filter(i =>
+    (currentCat==='All' || i.cat===currentCat) &&
+    (i.name.toLowerCase().includes(q) || i.cat.toLowerCase().includes(q))
+  );
+  if(!filtered.length){
+    document.getElementById('itemsGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#bbb;padding:40px;font-size:13px">No items found</div>';
+    return;
+  }
+  document.getElementById('itemsGrid').innerHTML = filtered.map(i => `
+    <div class="item-card" onclick="addItem(${i.id})">
+      <div>
+        <span class="veg-indicator ${i.veg?'veg':'nveg'}"><span class="veg-dot"></span></span>
+        <span class="item-cat-label">${i.cat}</span>
+      </div>
+      <div class="item-name">${i.name}</div>
+      <div class="item-price">&#8377;${i.price}</div>
+    </div>`).join('');
+}
+
+// ── Order operations ───────────────────────────────────────
+function addItem(id){
+  const item = items.find(i => i.id===id);
+  const ex = order.find(o => o.id===id);
+  if(ex) ex.qty++;
+  else order.push({...item, qty:1});
+  renderOrder();
+  showNotify('+ ' + item.name);
+}
+function changeQty(id, d){
+  const idx = order.findIndex(o => o.id===id);
+  if(idx===-1) return;
+  order[idx].qty += d;
+  if(order[idx].qty <= 0) order.splice(idx,1);
+  renderOrder();
+}
+function clearOrder(){
+  if(order.length && !confirm('Clear all items?')) return;
+  order = [];
+  document.getElementById('discVal').value = '';
+  renderOrder();
+}
+function renderOrder(){
+  const el = document.getElementById('orderItems');
+  if(!order.length){
+    el.innerHTML = '<div class="empty-order">&#128722;<br>No items added yet.<br>Tap any item to add.</div>';
+    renderSummary(); return;
+  }
+  el.innerHTML = order.map(o => `
+    <div class="order-item">
+      <div class="order-item-name">
+        ${o.name}
+        <div class="order-item-unit">&#8377;${o.price} each</div>
+      </div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty(${o.id},-1)">&#8722;</button>
+        <span class="qty-num">${o.qty}</span>
+        <button class="qty-btn" onclick="changeQty(${o.id},1)">&#43;</button>
+      </div>
+      <div class="item-total">&#8377;${(o.price*o.qty).toFixed(2)}</div>
+    </div>`).join('');
+  renderSummary();
+}
+
+// ── Bill calculation ───────────────────────────────────────
+function calcBill(){
+  const sub = order.reduce((s,o) => s + o.price*o.qty, 0);
+  const dv = parseFloat(document.getElementById('discVal').value) || 0;
+  const dt = document.getElementById('discType').value;
+  const disc = dt==='pct' ? Math.min(sub*dv/100, sub) : Math.min(dv, sub);
+  const taxable = sub - disc;
+  const gst = taxable * 0.05;
+  const total = taxable + gst;
+  return {sub, disc, gst, total};
+}
+function renderSummary(){
+  const {sub,disc,gst,total} = calcBill();
+  document.getElementById('subtotal').textContent = '₹'+sub.toFixed(2);
+  document.getElementById('discAmt').textContent  = '-₹'+disc.toFixed(2);
+  document.getElementById('gstAmt').textContent   = '₹'+gst.toFixed(2);
+  document.getElementById('grandTotal').textContent = '₹'+total.toFixed(2);
+}
+
+// ── Print bill ─────────────────────────────────────────────
+function printBill(){
+  if(!order.length){ showNotify('Add items first!'); return; }
+  const {sub,disc,gst,total} = calcBill();
+  const table = document.getElementById('tableNo').value;
+  const now = new Date();
+  const ds = now.toLocaleDateString('en-IN') + '  ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  const line = '================================';
+  const thin = '--------------------------------';
+  const rows = order.map(o => {
+    const nm = o.name.substring(0,16).padEnd(16);
+    const qty = String(o.qty).padStart(3);
+    const amt = ('Rs.'+(o.price*o.qty).toFixed(2)).padStart(9);
+    return nm + qty + amt;
+  }).join('\n');
+  const dv = parseFloat(document.getElementById('discVal').value)||0;
+  const dt = document.getElementById('discType').value;
+  const discStr = dt==='pct' ? dv+'%' : 'Rs.'+dv;
+
+  const txt =
+`${line}
+  ${settings.name}
+  GST No: ${settings.gst}${settings.phone ? '\n  Ph: '+settings.phone : ''}
+${line}
+Bill No : ${getBillNo()}
+Date    : ${ds}
+Table   : ${table}
+${thin}
+Item              Qty      Amt
+${thin}
+${rows}
+${thin}
+Subtotal              ${('Rs.'+sub.toFixed(2)).padStart(9)}
+Discount (${discStr.padEnd(6)})    ${('-Rs.'+disc.toFixed(2)).padStart(9)}
+GST @ 5%              ${('Rs.'+gst.toFixed(2)).padStart(9)}
+${line}
+TOTAL                 ${('Rs.'+total.toFixed(2)).padStart(9)}
+${line}
+   Thank you! Visit Again! :-D
+${line}`;
+
+  document.getElementById('printContent').textContent = txt;
+  document.getElementById('printOnlyArea').textContent = txt;
+  document.getElementById('printModal').classList.remove('hidden');
+}
+function closePrint(){ document.getElementById('printModal').classList.add('hidden'); }
+function doPrint(){ window.print(); }
+
+// ── Settle bill ────────────────────────────────────────────
+function settleBill(){
+  if(!order.length){ showNotify('No items to settle!'); return; }
+  const {total} = calcBill();
+  const history = JSON.parse(localStorage.getItem('billHistory_v2') || '[]');
+  history.unshift({
+    bill: getBillNo(),
+    total: total.toFixed(2),
+    time: new Date().toLocaleString('en-IN'),
+    items: order.length,
+    table: document.getElementById('tableNo').value
+  });
+  if(history.length > 50) history.pop();
+  localStorage.setItem('billHistory_v2', JSON.stringify(history));
+  billCounter++;
+  localStorage.setItem('billCounter_v2', billCounter);
+  updateBillMeta();
+  showNotify('✓ Settled! Rs.' + total.toFixed(2));
+  clearOrder();
+  order = [];
+  renderOrder();
+}
+
+function updateBillMeta(){
+  document.getElementById('hotelNameDisplay').textContent = settings.name;
+  document.getElementById('billMetaDisplay').innerHTML =
+    'Bill #' + String(billCounter).padStart(3,'0') + ' &nbsp;|&nbsp; GST: ' + settings.gst;
+}
+
+// ── Admin panel ────────────────────────────────────────────
+function openAdmin(){
+  const history = JSON.parse(localStorage.getItem('billHistory_v2') || '[]');
+  const todaySales = history.reduce((s,h) => s + parseFloat(h.total), 0);
+  const cats = [...new Set(items.map(i => i.cat))];
+  document.getElementById('adminContent').innerHTML = `
+    <div class="section-title">Hotel Settings</div>
+    <div class="admin-field"><label>Hotel / Cafe Name</label><input id="aName" value="${settings.name}"></div>
+    <div class="admin-field"><label>GST Number</label><input id="aGst" value="${settings.gst}"></div>
+    <div class="admin-field"><label>Phone Number (optional)</label><input id="aPhone" value="${settings.phone||''}"></div>
+    <button class="btn btn-primary" onclick="saveAdminSettings()" style="width:100%;margin-bottom:16px">&#10003; Save Settings</button>
+
+    <div class="sales-card">
+      <div class="label">Today's Total Revenue</div>
+      <div class="value">&#8377;${todaySales.toFixed(2)}</div>
+      <div style="font-size:11px;color:#1976d2;margin-top:2px">${history.length} bills settled</div>
+    </div>
+
+    <div class="section-title">Recent Bills</div>
+    <div style="margin-bottom:16px">
+      ${history.slice(0,8).map(h=>`
+        <div class="hist-item">
+          <span>${h.bill} &nbsp; ${h.table||''} &nbsp; ${h.items} items &nbsp; <span style="color:#aaa;font-size:11px">${h.time}</span></span>
+          <span>&#8377;${h.total}</span>
+        </div>`).join('') || '<div style="font-size:12px;color:#bbb;padding:8px 0">No bills yet</div>'}
+    </div>
+
+    <div class="section-title">Add New Menu Item</div>
+    <div class="admin-field"><label>Item Name</label><input id="nName" placeholder="e.g. Special Thali"></div>
+    <div class="add-grid">
+      <div class="admin-field"><label>Price (&#8377;)</label><input id="nPrice" type="number" placeholder="0" min="1"></div>
+      <div class="admin-field"><label>Category</label>
+        <select id="nCat">
+          ${cats.map(c=>`<option>${c}</option>`).join('')}
+          <option value="__new__">+ New Category</option>
+        </select>
+      </div>
+    </div>
+    <div class="admin-field" id="newCatField" style="display:none"><label>New Category Name</label><input id="nCatNew" placeholder="Category name"></div>
+    <div class="admin-field"><label>Veg / Non-Veg</label>
+      <select id="nVeg"><option value="true">&#128994; Veg</option><option value="false">&#128308; Non-Veg</option></select>
+    </div>
+    <button class="btn btn-primary" onclick="addNewItem()" style="width:100%">+ Add Item to Menu</button>
+  `;
+  document.getElementById('nCat').addEventListener('change', function(){
+    document.getElementById('newCatField').style.display = this.value==='__new__' ? 'block' : 'none';
+  });
+  document.getElementById('adminModal').classList.remove('hidden');
+}
+function saveAdminSettings(){
+  settings.name  = document.getElementById('aName').value.trim() || settings.name;
+  settings.gst   = document.getElementById('aGst').value.trim()  || settings.gst;
+  settings.phone = document.getElementById('aPhone').value.trim();
+  saveSettings();
+  updateBillMeta();
+  showNotify('Settings saved!');
+}
+function addNewItem(){
+  const nm  = document.getElementById('nName').value.trim();
+  const pr  = parseFloat(document.getElementById('nPrice').value);
+  let ct    = document.getElementById('nCat').value;
+  if(ct==='__new__') ct = document.getElementById('nCatNew').value.trim();
+  const vg  = document.getElementById('nVeg').value === 'true';
+  if(!nm){ showNotify('Enter item name!'); return; }
+  if(!pr || pr<=0){ showNotify('Enter valid price!'); return; }
+  if(!ct){ showNotify('Enter category!'); return; }
+  const newId = Math.max(...items.map(i=>i.id)) + 1;
+  items.push({id:newId, name:nm, cat:ct, price:pr, veg:vg});
+  saveItems();
+  renderCats(); renderItems();
+  showNotify(nm + ' added to menu!');
+  document.getElementById('nName').value = '';
+  document.getElementById('nPrice').value = '';
+}
+function closeAdmin(){ document.getElementById('adminModal').classList.add('hidden'); }
+
+// ── Notification ───────────────────────────────────────────
+function showNotify(msg){
+  const el = document.getElementById('notify');
+  el.textContent = msg; el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.style.opacity='0'; }, 2000);
+}
+
+// ── Close modals on overlay click ──────────────────────────
+document.getElementById('printModal').addEventListener('click', function(e){ if(e.target===this) closePrint(); });
+document.getElementById('adminModal').addEventListener('click', function(e){ if(e.target===this) closeAdmin(); });
+
+// ── Init ───────────────────────────────────────────────────
+renderCats();
+renderItems();
+renderSummary();
+updateBillMeta();
+</script>
+</body>
+</html>
