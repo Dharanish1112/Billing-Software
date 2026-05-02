@@ -2,108 +2,921 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1976d2">
 <title>Hotel & Cafe Billing Software</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:system-ui,sans-serif;background:#f0f2f5;height:100vh;overflow:hidden}
-  .app{display:grid;grid-template-columns:1fr 340px;height:100vh;overflow:hidden}
-  .left{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #e0e0e0;background:#fff}
-  .header{background:#fff;padding:12px 16px;border-bottom:1px solid #e0e0e0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .hotel-name{font-size:17px;font-weight:600;color:#1a1a1a}
-  .bill-meta{font-size:11px;color:#888}
-  .badge{font-size:11px;padding:3px 8px;border-radius:12px;font-weight:600;background:#e8f5e9;color:#2e7d32}
-  .search-bar{flex:1;min-width:160px}
-  .search-bar input{width:100%;padding:7px 12px;border:1px solid #ddd;border-radius:8px;background:#f8f8f8;color:#1a1a1a;font-size:13px;outline:none}
-  .search-bar input:focus{border-color:#1976d2;background:#fff}
-  .top-bar-btn{padding:6px 14px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#555;font-size:12px;cursor:pointer;font-weight:500}
-  .top-bar-btn:hover{background:#f5f5f5}
-  .cats{display:flex;gap:6px;padding:10px 16px;overflow-x:auto;background:#fff;border-bottom:1px solid #e0e0e0}
-  .cats::-webkit-scrollbar{height:3px}.cats::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px}
-  .cat-btn{padding:5px 14px;border-radius:20px;border:1px solid #ddd;background:#fff;color:#666;font-size:12px;cursor:pointer;white-space:nowrap;transition:all 0.15s;font-weight:500}
-  .cat-btn.active{background:#1976d2;color:#fff;border-color:#1976d2}
-  .items-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:12px;background:#f8f9fa}
-  .items-grid::-webkit-scrollbar{width:4px}.items-grid::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px}
-  .item-card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:10px;cursor:pointer;transition:all 0.15s;user-select:none}
-  .item-card:hover{border-color:#1976d2;box-shadow:0 2px 8px rgba(25,118,210,0.12);transform:translateY(-1px)}
-  .item-card:active{transform:scale(0.97)}
-  .veg-indicator{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;border:1.5px solid;margin-right:4px;vertical-align:middle;flex-shrink:0}
-  .veg-indicator.veg{border-color:#2e7d32}.veg-indicator.nveg{border-color:#c62828}
-  .veg-dot{width:7px;height:7px;border-radius:50%}
-  .veg .veg-dot{background:#2e7d32}.nveg .veg-dot{background:#c62828}
-  .item-cat-label{font-size:10px;color:#aaa;vertical-align:middle}
-  .item-name{font-size:13px;font-weight:600;color:#1a1a1a;margin-top:5px;line-height:1.3}
-  .item-price{font-size:14px;font-weight:700;color:#1976d2;margin-top:4px}
-  .right{display:flex;flex-direction:column;background:#fff;overflow:hidden}
-  .order-header{padding:12px 16px;border-bottom:1px solid #e0e0e0;display:flex;align-items:center;justify-content:space-between;background:#fff}
-  .order-title{font-size:15px;font-weight:600;color:#1a1a1a}
-  .table-select select{padding:5px 8px;border:1px solid #ddd;border-radius:8px;background:#f8f8f8;color:#1a1a1a;font-size:12px;cursor:pointer}
-  .order-items{flex:1;overflow-y:auto;padding:10px;background:#fafafa}
-  .order-items::-webkit-scrollbar{width:4px}.order-items::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px}
-  .empty-order{text-align:center;color:#bbb;font-size:13px;padding:50px 0;line-height:2}
-  .order-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:#fff;margin-bottom:6px;border:1px solid #f0f0f0}
-  .order-item-name{flex:1;font-size:13px;color:#1a1a1a;line-height:1.3}
-  .order-item-unit{font-size:11px;color:#aaa}
-  .qty-ctrl{display:flex;align-items:center;gap:4px}
-  .qty-btn{width:24px;height:24px;border-radius:50%;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:#333;line-height:1;transition:background 0.1s}
-  .qty-btn:hover{background:#1976d2;color:#fff;border-color:#1976d2}
-  .qty-num{font-size:13px;font-weight:600;min-width:20px;text-align:center;color:#1a1a1a}
-  .item-total{font-size:13px;font-weight:600;min-width:56px;text-align:right;color:#1a1a1a}
-  .bill-summary{padding:12px 16px;border-top:1px solid #e0e0e0;background:#fff}
-  .bill-row{display:flex;justify-content:space-between;font-size:13px;color:#666;margin-bottom:5px}
-  .bill-total{display:flex;justify-content:space-between;font-size:17px;font-weight:700;color:#1a1a1a;padding-top:8px;border-top:2px solid #e0e0e0;margin-top:6px}
-  .disc-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;background:#f8f9fa;padding:6px 8px;border-radius:8px}
-  .disc-row input{width:65px;padding:4px 8px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#1a1a1a;font-size:12px;outline:none}
-  .disc-row select{padding:4px 6px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#1a1a1a;font-size:12px}
-  .disc-row label{font-size:12px;color:#666;font-weight:500}
-  .actions{display:flex;gap:8px;margin-top:10px}
-  .btn{padding:9px 14px;border-radius:8px;border:1px solid #ddd;background:#fff;color:#333;font-size:13px;cursor:pointer;flex:1;font-weight:600;transition:all 0.15s}
-  .btn:hover{background:#f5f5f5}
-  .btn-primary{background:#1976d2;color:#fff;border-color:#1976d2}
-  .btn-primary:hover{background:#1565c0}
-  .btn-danger{background:#ffebee;color:#c62828;border-color:#ffcdd2}
-  .btn-danger:hover{background:#ffcdd2}
-  .btn-success{background:#e8f5e9;color:#2e7d32;border-color:#c8e6c9}
-  .btn-success:hover{background:#c8e6c9}
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:100}
-  .modal-box{background:#fff;border-radius:14px;padding:22px;width:400px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
-  .modal-box::-webkit-scrollbar{width:4px}.modal-box::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px}
-  .modal-title{font-size:17px;font-weight:700;margin-bottom:16px;color:#1a1a1a;padding-bottom:10px;border-bottom:1px solid #eee}
-  .print-area{font-family:'Courier New',monospace;font-size:12px;color:#1a1a1a;line-height:1.7;background:#fafafa;padding:14px;border-radius:8px;border:1px solid #eee;white-space:pre}
-  .hidden{display:none}
-  .admin-field{margin-bottom:12px}
-  .admin-field label{font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500}
-  .admin-field input,.admin-field select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;background:#f8f8f8;color:#1a1a1a;font-size:13px;outline:none}
-  .admin-field input:focus,.admin-field select:focus{border-color:#1976d2;background:#fff}
-  .notify{position:fixed;bottom:24px;right:24px;background:#323232;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none}
-  .sales-card{background:#e3f2fd;border-radius:10px;padding:12px;margin-bottom:14px;border:1px solid #bbdefb}
-  .sales-card .label{font-size:11px;color:#1976d2;font-weight:600;margin-bottom:4px}
-  .sales-card .value{font-size:22px;font-weight:700;color:#0d47a1}
-  .hist-item{display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid #f5f5f5;color:#555}
-  .hist-item span:last-child{font-weight:600;color:#1a1a1a}
-  .section-title{font-size:13px;font-weight:700;margin-bottom:8px;color:#1a1a1a}
-  .add-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  @media print{
-    body{overflow:visible;height:auto}
-    .app,.left,.right,.header,.cats,.order-header,.bill-summary,.actions,.top-bar-btn,.modal-overlay{display:none!important}
-    .print-only{display:block!important;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;color:#000;padding:20px}
+  /* ═══════════════════════════════════════════════════════════
+     BASE STYLES
+     ═══════════════════════════════════════════════════════════ */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
   }
-  .print-only{display:none}
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: #f0f2f5;
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  /* ═══════════════════════════════════════════════════════════
+     LAYOUT - DESKTOP
+     ═══════════════════════════════════════════════════════════ */
+  .app {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .left {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid #e0e0e0;
+    background: #fff;
+  }
+  
+  .right {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    overflow: hidden;
+  }
+  
+  /* ═══════════════════════════════════════════════════════════
+     HEADER
+     ═══════════════════════════════════════════════════════════ */
+  .header {
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    padding: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  
+  .hotel-info {
+    flex: 1;
+  }
+  
+  .hotel-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  
+  .bill-meta {
+    font-size: 11px;
+    color: rgba(255,255,255,0.85);
+  }
+  
+  .badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    background: #4caf50;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .search-bar {
+    position: relative;
+  }
+  
+  .search-bar input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.95);
+    color: #1a1a1a;
+    font-size: 14px;
+    outline: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .search-bar input:focus {
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-size: 16px;
+  }
+  
+  .top-bar-btn {
+    padding: 8px 16px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+  }
+  
+  .top-bar-btn:hover {
+    background: rgba(255,255,255,0.25);
+    transform: translateY(-1px);
+  }
+  
+  .top-bar-btn:active {
+    transform: scale(0.95);
+  }
+  
+  /* ═══════════════════════════════════════════════════════════
+     CATEGORIES
+     ═══════════════════════════════════════════════════════════ */
+  .cats {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    scrollbar-width: thin;
+  }
+  
+  .cats::-webkit-scrollbar {
+    height: 4px;
+  }
+  
+  .cats::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 4px;
+  }
+  
+  .cat-btn {
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: 1.5px solid #e0e0e0;
+    background: #fff;
+    color: #666;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    font-weight: 600;
+  }
+  
+  .cat-btn.active {
+    background: #1976d2;
+    color: #fff;
+    border-color: #1976d2;
+    box-shadow: 0 2px 8px rgba(25,118,210,0.3);
+  }
+  
+  .cat-btn:hover:not(.active) {
+    border-color: #1976d2;
+    color: #1976d2;
+  }
+  
+  /* ═══════════════════════════════════════════════════════════
+     ITEMS GRID
+     ═══════════════════════════════════════════════════════════ */
+  .items-grid {
+    flex: 1;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    padding: 16px;
+    background: #f8f9fa;
+  }
+  
+  .items-grid::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .items-grid::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+  }
+  
+  .item-card {
+    background: #fff;
+    border: 1.5px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  
+  .item-card:hover {
+    border-color: #1976d2;
+    box-shadow: 0 4px 12px rgba(25,118,210,0.15);
+    transform: translateY(-2px);
+  }
+  
+  .item-card:active {
+    transform: scale(0.97);
+  }
+  
+  .veg-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 2px solid;
+    margin-right: 6px;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  
+  .veg-indicator.veg {
+    border-color: #2e7d32;
+  }
+  
+  .veg-indicator.nveg {
+    border-color: #c62828;
+  }
+  
+  .veg-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  
+  .veg .veg-dot {
+    background: #2e7d32;
+  }
+  
+  .nveg .veg-dot {
+    background: #c62828;
+  }
+  
+  .item-cat-label {
+    font-size: 10px;
+    color: #999;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .item-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+  
+  .item-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1976d2;
+    margin-top: 6px;
+  }
+  
+  /* ═══════════════════════════════════════════════════════════
+     ORDER PANEL
+     ═══════════════════════════════════════════════════════════ */
+  .order-header {
+    padding: 16px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fafafa;
+  }
+  
+  .order-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+  
+  .table-select select {
+    padding: 8px 12px;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  
+  .order-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    background: #fafafa;
+  }
+  
+  .order-items::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .order-items::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+  }
+  
+  .empty-order {
+    text-align: center;
+    color: #bbb;
+    font-size: 14px;
+    padding: 60px 20px;
+    line-height: 2;
+  }
+  
+  .order-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 10px;
+    background: #fff;
+    margin-bottom: 8px;
+    border: 1.5px solid #f0f0f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  
+  .order-item-name {
+    flex: 1;
+    font-size: 14px;
+    color: #1a1a1a;
+    line-height: 1.4;
+    font-weight: 600;
+  }
+  
+  .order-item-unit {
+    font-size: 11px;
+    color: #999;
+    font-weight: 400;
+  }
+  
+  .qty-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .qty-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid #ddd;
+    background: #f5f5f5;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    line-height: 1;
+    transition: all 0.2s;
+    font-weight: 700;
+  }
+  
+  .qty-btn:hover {
+    background: #1976d2;
+    color: #fff;
+    border-color: #1976d2;
+    transform: scale(1.1);
+  }
+  
+  .qty-btn:active {
+    transform: scale(0.95);
+  }
+  
+  .qty-num {
+    font-size: 14px;
+    font-weight: 700;
+    min-width: 24px;
+    text-align: center;
+    color: #1a1a1a;
+  }
+  
+  .item-total {
+    font-size: 14px;
+    font-weight: 700;
+    min-width: 70px;
+    text-align: right;
+    color: #1976d2;
+  }
+  
+  /* ═══════════════════════════════════════════════════════════
+     BILL SUMMARY
+     ═══════════════════════════════════════════════════════════ */
+  .bill-summary {
+    padding: 16px;
+    border-top: 2px solid #e0e0e0;
+    background: #fff;
+  }
+  
+  .disc-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 10px;
+  }
+  
+  .disc-row input {
+    width: 70px;
+    padding: 6px 10px;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 13px;
+    outline: none;
+    font-weight: 600;
+  }
+  
+  .disc-row input:focus {
+    border-color: #1976d2;
+  }
+  
+  .disc-row select {
+    padding: 6px 8px;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  
+  .disc-row label {
+    font-size: 13px;
+    color: #666;
+    font-weight: 600;
+  }
+  
+  .bill-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  
+  .bill-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a1a;
+    padding-top: 12px;
+    border-top: 2px solid #e0e0e0;
+    margin-top: 8px;
+  }
+  
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  
+  .btn {
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: none;
+    background: #f5f5f5;
+    color: #333;
+    font-size: 14px;
+    cursor: pointer;
+    flex: 1;
+    font-weight: 700;
+    transition: all 0.2s;
+  }
+  
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  
+  .btn:active {
+    transform: scale(0.97);
+  }
+  
+  .btn-primary {
+    background: #1976d2;
+    color: #fff;
+  }
+  
+  .btn-primary:hover {
+    background: #1565c0;
+  }
+  
+  .btn-danger {
+    background: #ffebee;
+    color: #c62828;
+  }
+  
+  .btn-danger:hover {
+    background: #ffcdd2;
+  }
+  
+  .btn-success {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+  
+  .btn-success:hover {
+    background: #c8e6c9;
+  }
+  
+  /* ═══════════════════════════════════════════════════════════
+     MODALS
+     ═══════════════════════════════════════════════════════════ */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+  }
+  
+  .modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 440px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  
+  .modal-box::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .modal-box::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+  }
+  
+  .modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #eee;
+  }
+  
+  .print-area {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #1a1a1a;
+    line-height: 1.6;
+    background: #fafafa;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  /* ═══════════════════════════════════════════════════════════
+     ADMIN PANEL
+     ═══════════════════════════════════════════════════════════ */
+  .admin-field {
+    margin-bottom: 14px;
+  }
+  
+  .admin-field label {
+    font-size: 13px;
+    color: #666;
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  
+  .admin-field input,
+  .admin-field select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #ddd;
+    border-radius: 10px;
+    background: #f8f8f8;
+    color: #1a1a1a;
+    font-size: 14px;
+    outline: none;
+  }
+  
+  .admin-field input:focus,
+  .admin-field select:focus {
+    border-color: #1976d2;
+    background: #fff;
+  }
+  
+  .notify {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #323232;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  
+  .sales-card {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid #90caf9;
+  }
+  
+  .sales-card .label {
+    font-size: 12px;
+    color: #1976d2;
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .sales-card .value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0d47a1;
+  }
+  
+  .hist-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
+    color: #555;
+  }
+  
+  .hist-item span:last-child {
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+  
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #1a1a1a;
+    margin-top: 8px;
+  }
+  
+  .add-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  
+  /* ═══════════════════════════════════════════════════════════
+     MOBILE RESPONSIVE
+     ═══════════════════════════════════════════════════════════ */
+  @media (max-width: 768px) {
+    .app {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr auto;
+    }
+    
+    .left {
+      border-right: none;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .right {
+      max-height: 50vh;
+    }
+    
+    .header {
+      padding: 12px;
+    }
+    
+    .header-top {
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .hotel-name {
+      font-size: 16px;
+    }
+    
+    .bill-meta {
+      font-size: 10px;
+    }
+    
+    .top-bar-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    
+    .cats {
+      padding: 10px 12px;
+      gap: 6px;
+    }
+    
+    .cat-btn {
+      padding: 6px 14px;
+      font-size: 12px;
+    }
+    
+    .items-grid {
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+      padding: 12px;
+    }
+    
+    .item-card {
+      padding: 10px;
+    }
+    
+    .item-name {
+      font-size: 13px;
+    }
+    
+    .item-price {
+      font-size: 14px;
+    }
+    
+    .order-header {
+      padding: 12px;
+    }
+    
+    .order-title {
+      font-size: 14px;
+    }
+    
+    .order-items {
+      padding: 10px;
+    }
+    
+    .order-item {
+      padding: 10px;
+      gap: 8px;
+    }
+    
+    .order-item-name {
+      font-size: 13px;
+    }
+    
+    .qty-btn {
+      width: 26px;
+      height: 26px;
+      font-size: 14px;
+    }
+    
+    .qty-num {
+      font-size: 13px;
+      min-width: 20px;
+    }
+    
+    .item-total {
+      font-size: 13px;
+      min-width: 60px;
+    }
+    
+    .bill-summary {
+      padding: 12px;
+    }
+    
+    .bill-row {
+      font-size: 13px;
+    }
+    
+    .bill-total {
+      font-size: 18px;
+    }
+    
+    .btn {
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+    
+    .modal-box {
+      width: 95%;
+      padding: 20px;
+    }
+    
+    .modal-title {
+      font-size: 18px;
+    }
+    
+    .notify {
+      bottom: 16px;
+      right: 16px;
+      left: 16px;
+      text-align: center;
+    }
+  }
+  
+  /* ═══════════════════════════════════════════════════════════
+     PRINT STYLES
+     ═══════════════════════════════════════════════════════════ */
+  @media print {
+    @page {
+      size: 80mm auto;
+      margin: 0;
+    }
+    
+    body {
+      overflow: visible;
+      height: auto;
+      background: #fff;
+    }
+    
+    .app, .left, .right, .header, .cats, .order-header,
+    .bill-summary, .actions, .top-bar-btn, .modal-overlay {
+      display: none !important;
+    }
+    
+    .print-only {
+      display: block !important;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #000;
+      padding: 10mm;
+      width: 80mm;
+    }
+    
+    .print-only .line {
+      border-top: 1px dashed #000;
+      margin: 4px 0;
+    }
+    
+    .print-only .bold {
+      font-weight: bold;
+    }
+    
+    .print-only .center {
+      text-align: center;
+    }
+    
+    .print-only .right-align {
+      text-align: right;
+    }
+  }
+  
+  .print-only {
+    display: none;
+  }
 </style>
 </head>
 <body>
-
 <div class="app" id="mainApp">
   <!-- LEFT: Menu -->
   <div class="left">
     <div class="header">
-      <div>
-        <div class="hotel-name" id="hotelNameDisplay">Sri Murugan Hotel &amp; Cafe</div>
-        <div class="bill-meta" id="billMetaDisplay">Bill #001 &nbsp;|&nbsp; GST: 33AABCS1429B1Z4</div>
+      <div class="header-top">
+        <div class="hotel-info">
+          <div class="hotel-name" id="hotelNameDisplay">Sri Murugan Hotel & Cafe</div>
+          <div class="bill-meta" id="billMetaDisplay">Bill #001 | GST: 33AABCS1429B1Z4</div>
+        </div>
+        <span class="badge">● OPEN</span>
       </div>
-      <span class="badge">&#x25cf; OPEN</span>
-      <div class="search-bar"><input type="text" id="searchInput" placeholder="&#128269; Search items..." oninput="filterItems()"></div>
-      <button class="top-bar-btn" onclick="openAdmin()">&#9881; Admin</button>
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search items..." oninput="filterItems()">
+      </div>
     </div>
     <div class="cats" id="catBar"></div>
     <div class="items-grid" id="itemsGrid"></div>
@@ -112,8 +925,8 @@
   <!-- RIGHT: Order -->
   <div class="right">
     <div class="order-header">
-      <div class="order-title">&#128203; Current Order</div>
-      <div>
+      <div class="order-title">📋 Current Order</div>
+      <div class="table-select">
         <select id="tableNo">
           <option>Takeaway</option>
           <option>Table 1</option><option>Table 2</option><option>Table 3</option>
@@ -123,25 +936,25 @@
       </div>
     </div>
     <div class="order-items" id="orderItems">
-      <div class="empty-order">&#128722;<br>No items added yet.<br>Tap any item to add.</div>
+      <div class="empty-order">🛒<br>No items added yet.<br>Tap any item to add.</div>
     </div>
     <div class="bill-summary">
       <div class="disc-row">
         <label>Discount:</label>
         <input type="number" id="discVal" placeholder="0" min="0" oninput="renderSummary()">
         <select id="discType" onchange="renderSummary()">
-          <option value="flat">&#8377; Flat</option>
+          <option value="flat">₹ Flat</option>
           <option value="pct">% Percent</option>
         </select>
       </div>
-      <div class="bill-row"><span>Subtotal</span><span id="subtotal">&#8377;0.00</span></div>
-      <div class="bill-row"><span>Discount</span><span id="discAmt" style="color:#c62828">&#8377;0.00</span></div>
-      <div class="bill-row"><span>GST (5%)</span><span id="gstAmt">&#8377;0.00</span></div>
-      <div class="bill-total"><span>Grand Total</span><span id="grandTotal" style="color:#1976d2">&#8377;0.00</span></div>
+      <div class="bill-row"><span>Subtotal</span><span id="subtotal">₹0.00</span></div>
+      <div class="bill-row"><span>Discount</span><span id="discAmt" style="color:#c62828">₹0.00</span></div>
+      <div class="bill-row"><span>GST (5%)</span><span id="gstAmt">₹0.00</span></div>
+      <div class="bill-total"><span>Grand Total</span><span id="grandTotal" style="color:#1976d2">₹0.00</span></div>
       <div class="actions">
-        <button class="btn btn-danger" onclick="clearOrder()">&#10005; Clear</button>
-        <button class="btn btn-success" onclick="printBill()">&#128438; Print</button>
-        <button class="btn btn-primary" onclick="settleBill()">&#10003; Settle</button>
+        <button class="btn btn-danger" onclick="clearOrder()">✕ Clear</button>
+        <button class="btn btn-success" onclick="printBill()">🖨 Print</button>
+        <button class="btn btn-primary" onclick="settleBill()">✓ Settle</button>
       </div>
     </div>
   </div>
@@ -149,12 +962,12 @@
 
 <!-- Print Modal -->
 <div class="modal-overlay hidden" id="printModal">
-  <div class="modal-box" style="width:440px">
-    <div class="modal-title">&#128438; Bill Preview</div>
+  <div class="modal-box">
+    <div class="modal-title">🖨 Bill Preview</div>
     <div class="print-area" id="printContent"></div>
-    <div class="actions" style="margin-top:14px">
-      <button class="btn" onclick="closePrint()">&#10005; Close</button>
-      <button class="btn btn-primary" onclick="doPrint()">&#128438; Print / Save PDF</button>
+    <div class="actions" style="margin-top:16px">
+      <button class="btn" onclick="closePrint()">✕ Close</button>
+      <button class="btn btn-primary" onclick="doPrint()">🖨 Print / Save PDF</button>
     </div>
   </div>
 </div>
@@ -162,9 +975,9 @@
 <!-- Admin Modal -->
 <div class="modal-overlay hidden" id="adminModal">
   <div class="modal-box">
-    <div class="modal-title">&#9881; Admin Panel</div>
+    <div class="modal-title">⚙ Admin Panel</div>
     <div id="adminContent"></div>
-    <button class="btn" style="margin-top:12px;width:100%" onclick="closeAdmin()">&#10005; Close</button>
+    <button class="btn" style="margin-top:14px;width:100%" onclick="closeAdmin()">✕ Close</button>
   </div>
 </div>
 
@@ -172,6 +985,9 @@
 
 <!-- Print only area -->
 <div class="print-only" id="printOnlyArea"></div>
+
+<button class="top-bar-btn" onclick="openAdmin()" style="position:fixed;top:16px;right:16px;z-index:50">⚙ Admin</button>
+
 
 <script>
 const DEFAULT_MENU = [
@@ -195,7 +1011,6 @@ const DEFAULT_MENU = [
   {id:18,name:"Uttapam",cat:"Breakfast",price:80,veg:true},
   {id:19,name:"Kichadi",cat:"Breakfast",price:60,veg:true},
   {id:20,name:"Boiled Eggs",cat:"Breakfast",price:30,veg:false},
-
   {id:21,name:"Meals (Full)",cat:"Lunch",price:150,veg:true},
   {id:22,name:"Veg Rice",cat:"Lunch",price:100,veg:true},
   {id:23,name:"Chicken Biriyani",cat:"Lunch",price:200,veg:false},
@@ -216,7 +1031,6 @@ const DEFAULT_MENU = [
   {id:38,name:"Paneer Butter Masala",cat:"Lunch",price:180,veg:true},
   {id:39,name:"Egg Rice",cat:"Lunch",price:120,veg:false},
   {id:40,name:"Mini Meals",cat:"Lunch",price:100,veg:true},
-
   {id:41,name:"Chicken Kothu Parotta",cat:"Dinner",price:180,veg:false},
   {id:42,name:"Egg Kothu Parotta",cat:"Dinner",price:120,veg:false},
   {id:43,name:"Veg Kothu Parotta",cat:"Dinner",price:100,veg:true},
@@ -237,7 +1051,6 @@ const DEFAULT_MENU = [
   {id:58,name:"Veg Curry + Roti",cat:"Dinner",price:120,veg:true},
   {id:59,name:"Pepper Chicken",cat:"Dinner",price:250,veg:false},
   {id:60,name:"Kheema Parotta",cat:"Dinner",price:150,veg:false},
-
   {id:61,name:"Filter Coffee",cat:"Beverages",price:30,veg:true},
   {id:62,name:"Masala Tea",cat:"Beverages",price:25,veg:true},
   {id:63,name:"Plain Tea",cat:"Beverages",price:20,veg:true},
@@ -258,7 +1071,6 @@ const DEFAULT_MENU = [
   {id:78,name:"Green Tea",cat:"Beverages",price:40,veg:true},
   {id:79,name:"Horlicks",cat:"Beverages",price:50,veg:true},
   {id:80,name:"Bournvita",cat:"Beverages",price:50,veg:true},
-
   {id:81,name:"Samosa (2 pcs)",cat:"Snacks",price:40,veg:true},
   {id:82,name:"Onion Pakoda",cat:"Snacks",price:60,veg:true},
   {id:83,name:"Bread Bajji",cat:"Snacks",price:30,veg:true},
@@ -289,20 +1101,23 @@ let settings = JSON.parse(localStorage.getItem('billingSettings_v2') || '{"name"
 
 function saveItems(){ localStorage.setItem('menuItems_v2', JSON.stringify(items)); }
 function saveSettings(){ localStorage.setItem('billingSettings_v2', JSON.stringify(settings)); }
-
 function getBillNo(){ return 'B' + String(billCounter).padStart(3,'0'); }
 
-// ── Render categories ──────────────────────────────────────
+
+// ══════════════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ══════════════════════════════════════════════════════════════
 function renderCats(){
   const cats = ['All', ...new Set(items.map(i => i.cat))];
   document.getElementById('catBar').innerHTML = cats.map(c =>
     `<button class="cat-btn${c===currentCat?' active':''}" onclick="selectCat('${c}')">${c}</button>`
   ).join('');
 }
+
 function selectCat(c){ currentCat = c; renderCats(); renderItems(); }
 
-// ── Render items ───────────────────────────────────────────
 function filterItems(){ renderItems(); }
+
 function renderItems(){
   const q = document.getElementById('searchInput').value.toLowerCase();
   const filtered = items.filter(i =>
@@ -310,7 +1125,7 @@ function renderItems(){
     (i.name.toLowerCase().includes(q) || i.cat.toLowerCase().includes(q))
   );
   if(!filtered.length){
-    document.getElementById('itemsGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#bbb;padding:40px;font-size:13px">No items found</div>';
+    document.getElementById('itemsGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#bbb;padding:40px;font-size:14px">No items found</div>';
     return;
   }
   document.getElementById('itemsGrid').innerHTML = filtered.map(i => `
@@ -320,19 +1135,22 @@ function renderItems(){
         <span class="item-cat-label">${i.cat}</span>
       </div>
       <div class="item-name">${i.name}</div>
-      <div class="item-price">&#8377;${i.price}</div>
+      <div class="item-price">₹${i.price}</div>
     </div>`).join('');
 }
 
-// ── Order operations ───────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// ORDER OPERATIONS
+// ══════════════════════════════════════════════════════════════
 function addItem(id){
   const item = items.find(i => i.id===id);
   const ex = order.find(o => o.id===id);
   if(ex) ex.qty++;
   else order.push({...item, qty:1});
   renderOrder();
-  showNotify('+ ' + item.name);
+  showNotify('✓ ' + item.name);
 }
+
 function changeQty(id, d){
   const idx = order.findIndex(o => o.id===id);
   if(idx===-1) return;
@@ -340,35 +1158,39 @@ function changeQty(id, d){
   if(order[idx].qty <= 0) order.splice(idx,1);
   renderOrder();
 }
+
 function clearOrder(){
   if(order.length && !confirm('Clear all items?')) return;
   order = [];
   document.getElementById('discVal').value = '';
   renderOrder();
 }
+
 function renderOrder(){
   const el = document.getElementById('orderItems');
   if(!order.length){
-    el.innerHTML = '<div class="empty-order">&#128722;<br>No items added yet.<br>Tap any item to add.</div>';
+    el.innerHTML = '<div class="empty-order">🛒<br>No items added yet.<br>Tap any item to add.</div>';
     renderSummary(); return;
   }
   el.innerHTML = order.map(o => `
     <div class="order-item">
       <div class="order-item-name">
         ${o.name}
-        <div class="order-item-unit">&#8377;${o.price} each</div>
+        <div class="order-item-unit">₹${o.price} each</div>
       </div>
       <div class="qty-ctrl">
-        <button class="qty-btn" onclick="changeQty(${o.id},-1)">&#8722;</button>
+        <button class="qty-btn" onclick="changeQty(${o.id},-1)">−</button>
         <span class="qty-num">${o.qty}</span>
-        <button class="qty-btn" onclick="changeQty(${o.id},1)">&#43;</button>
+        <button class="qty-btn" onclick="changeQty(${o.id},1)">+</button>
       </div>
-      <div class="item-total">&#8377;${(o.price*o.qty).toFixed(2)}</div>
+      <div class="item-total">₹${(o.price*o.qty).toFixed(2)}</div>
     </div>`).join('');
   renderSummary();
 }
 
-// ── Bill calculation ───────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// BILL CALCULATION
+// ══════════════════════════════════════════════════════════════
 function calcBill(){
   const sub = order.reduce((s,o) => s + o.price*o.qty, 0);
   const dv = parseFloat(document.getElementById('discVal').value) || 0;
@@ -379,6 +1201,7 @@ function calcBill(){
   const total = taxable + gst;
   return {sub, disc, gst, total};
 }
+
 function renderSummary(){
   const {sub,disc,gst,total} = calcBill();
   document.getElementById('subtotal').textContent = '₹'+sub.toFixed(2);
@@ -387,57 +1210,63 @@ function renderSummary(){
   document.getElementById('grandTotal').textContent = '₹'+total.toFixed(2);
 }
 
-// ── Print bill ─────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// PRINT BILL
+// ══════════════════════════════════════════════════════════════
 function printBill(){
-  if(!order.length){ showNotify('Add items first!'); return; }
+  if(!order.length){ showNotify('⚠ Add items first!'); return; }
   const {sub,disc,gst,total} = calcBill();
   const table = document.getElementById('tableNo').value;
   const now = new Date();
-  const ds = now.toLocaleDateString('en-IN') + '  ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  const ds = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
   const line = '================================';
   const thin = '--------------------------------';
+  
+  // Format items properly - each on its own line
   const rows = order.map(o => {
-    const nm = o.name.substring(0,16).padEnd(16);
-    const qty = String(o.qty).padStart(3);
-    const amt = ('Rs.'+(o.price*o.qty).toFixed(2)).padStart(9);
-    return nm + qty + amt;
-  }).join('\n');
+    const itemLine = `${o.name}`;
+    const qtyPrice = `  ${o.qty} x ₹${o.price}`;
+    const total = `₹${(o.price*o.qty).toFixed(2)}`;
+    const spacing = ' '.repeat(Math.max(1, 32 - qtyPrice.length - total.length));
+    return `${itemLine}\n${qtyPrice}${spacing}${total}`;
+  }).join('\n' + thin + '\n');
+  
   const dv = parseFloat(document.getElementById('discVal').value)||0;
   const dt = document.getElementById('discType').value;
-  const discStr = dt==='pct' ? dv+'%' : 'Rs.'+dv;
+  const discStr = dt==='pct' ? dv+'%' : '₹'+dv;
 
-  const txt =
-`${line}
+  const txt = `${line}
   ${settings.name}
   GST No: ${settings.gst}${settings.phone ? '\n  Ph: '+settings.phone : ''}
 ${line}
 Bill No : ${getBillNo()}
 Date    : ${ds}
 Table   : ${table}
-${thin}
-Item              Qty      Amt
-${thin}
+${line}
 ${rows}
-${thin}
-Subtotal              ${('Rs.'+sub.toFixed(2)).padStart(9)}
-Discount (${discStr.padEnd(6)})    ${('-Rs.'+disc.toFixed(2)).padStart(9)}
-GST @ 5%              ${('Rs.'+gst.toFixed(2)).padStart(9)}
 ${line}
-TOTAL                 ${('Rs.'+total.toFixed(2)).padStart(9)}
+Subtotal           ₹${sub.toFixed(2)}
+Discount (${discStr})      -₹${disc.toFixed(2)}
+GST @ 5%           ₹${gst.toFixed(2)}
 ${line}
-   Thank you! Visit Again! :-D
+TOTAL              ₹${total.toFixed(2)}
+${line}
+   Thank you! Visit Again! 😊
 ${line}`;
 
   document.getElementById('printContent').textContent = txt;
   document.getElementById('printOnlyArea').textContent = txt;
   document.getElementById('printModal').classList.remove('hidden');
 }
+
 function closePrint(){ document.getElementById('printModal').classList.add('hidden'); }
 function doPrint(){ window.print(); }
 
-// ── Settle bill ────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// SETTLE BILL
+// ══════════════════════════════════════════════════════════════
 function settleBill(){
-  if(!order.length){ showNotify('No items to settle!'); return; }
+  if(!order.length){ showNotify('⚠ No items to settle!'); return; }
   const {total} = calcBill();
   const history = JSON.parse(localStorage.getItem('billHistory_v2') || '[]');
   history.unshift({
@@ -452,19 +1281,22 @@ function settleBill(){
   billCounter++;
   localStorage.setItem('billCounter_v2', billCounter);
   updateBillMeta();
-  showNotify('✓ Settled! Rs.' + total.toFixed(2));
-  clearOrder();
+  showNotify('✓ Settled! ₹' + total.toFixed(2));
   order = [];
+  document.getElementById('discVal').value = '';
   renderOrder();
 }
 
 function updateBillMeta(){
   document.getElementById('hotelNameDisplay').textContent = settings.name;
   document.getElementById('billMetaDisplay').innerHTML =
-    'Bill #' + String(billCounter).padStart(3,'0') + ' &nbsp;|&nbsp; GST: ' + settings.gst;
+    'Bill #' + String(billCounter).padStart(3,'0') + ' | GST: ' + settings.gst;
 }
 
-// ── Admin panel ────────────────────────────────────────────
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN PANEL
+// ══════════════════════════════════════════════════════════════
 function openAdmin(){
   const history = JSON.parse(localStorage.getItem('billHistory_v2') || '[]');
   const todaySales = history.reduce((s,h) => s + parseFloat(h.total), 0);
@@ -474,27 +1306,27 @@ function openAdmin(){
     <div class="admin-field"><label>Hotel / Cafe Name</label><input id="aName" value="${settings.name}"></div>
     <div class="admin-field"><label>GST Number</label><input id="aGst" value="${settings.gst}"></div>
     <div class="admin-field"><label>Phone Number (optional)</label><input id="aPhone" value="${settings.phone||''}"></div>
-    <button class="btn btn-primary" onclick="saveAdminSettings()" style="width:100%;margin-bottom:16px">&#10003; Save Settings</button>
+    <button class="btn btn-primary" onclick="saveAdminSettings()" style="width:100%;margin-bottom:18px">✓ Save Settings</button>
 
     <div class="sales-card">
       <div class="label">Today's Total Revenue</div>
-      <div class="value">&#8377;${todaySales.toFixed(2)}</div>
-      <div style="font-size:11px;color:#1976d2;margin-top:2px">${history.length} bills settled</div>
+      <div class="value">₹${todaySales.toFixed(2)}</div>
+      <div style="font-size:11px;color:#1976d2;margin-top:4px">${history.length} bills settled</div>
     </div>
 
     <div class="section-title">Recent Bills</div>
-    <div style="margin-bottom:16px">
-      ${history.slice(0,8).map(h=>`
+    <div style="margin-bottom:18px;max-height:200px;overflow-y:auto">
+      ${history.slice(0,10).map(h=>`
         <div class="hist-item">
-          <span>${h.bill} &nbsp; ${h.table||''} &nbsp; ${h.items} items &nbsp; <span style="color:#aaa;font-size:11px">${h.time}</span></span>
-          <span>&#8377;${h.total}</span>
-        </div>`).join('') || '<div style="font-size:12px;color:#bbb;padding:8px 0">No bills yet</div>'}
+          <span>${h.bill} • ${h.table||''} • ${h.items} items<br><span style="color:#aaa;font-size:11px">${h.time}</span></span>
+          <span>₹${h.total}</span>
+        </div>`).join('') || '<div style="font-size:13px;color:#bbb;padding:10px 0">No bills yet</div>'}
     </div>
 
     <div class="section-title">Add New Menu Item</div>
     <div class="admin-field"><label>Item Name</label><input id="nName" placeholder="e.g. Special Thali"></div>
     <div class="add-grid">
-      <div class="admin-field"><label>Price (&#8377;)</label><input id="nPrice" type="number" placeholder="0" min="1"></div>
+      <div class="admin-field"><label>Price (₹)</label><input id="nPrice" type="number" placeholder="0" min="1"></div>
       <div class="admin-field"><label>Category</label>
         <select id="nCat">
           ${cats.map(c=>`<option>${c}</option>`).join('')}
@@ -504,7 +1336,7 @@ function openAdmin(){
     </div>
     <div class="admin-field" id="newCatField" style="display:none"><label>New Category Name</label><input id="nCatNew" placeholder="Category name"></div>
     <div class="admin-field"><label>Veg / Non-Veg</label>
-      <select id="nVeg"><option value="true">&#128994; Veg</option><option value="false">&#128308; Non-Veg</option></select>
+      <select id="nVeg"><option value="true">🟢 Veg</option><option value="false">🔴 Non-Veg</option></select>
     </div>
     <button class="btn btn-primary" onclick="addNewItem()" style="width:100%">+ Add Item to Menu</button>
   `;
@@ -513,46 +1345,60 @@ function openAdmin(){
   });
   document.getElementById('adminModal').classList.remove('hidden');
 }
+
 function saveAdminSettings(){
   settings.name  = document.getElementById('aName').value.trim() || settings.name;
   settings.gst   = document.getElementById('aGst').value.trim()  || settings.gst;
   settings.phone = document.getElementById('aPhone').value.trim();
   saveSettings();
   updateBillMeta();
-  showNotify('Settings saved!');
+  showNotify('✓ Settings saved!');
 }
+
 function addNewItem(){
   const nm  = document.getElementById('nName').value.trim();
   const pr  = parseFloat(document.getElementById('nPrice').value);
   let ct    = document.getElementById('nCat').value;
   if(ct==='__new__') ct = document.getElementById('nCatNew').value.trim();
   const vg  = document.getElementById('nVeg').value === 'true';
-  if(!nm){ showNotify('Enter item name!'); return; }
-  if(!pr || pr<=0){ showNotify('Enter valid price!'); return; }
-  if(!ct){ showNotify('Enter category!'); return; }
+  if(!nm){ showNotify('⚠ Enter item name!'); return; }
+  if(!pr || pr<=0){ showNotify('⚠ Enter valid price!'); return; }
+  if(!ct){ showNotify('⚠ Enter category!'); return; }
   const newId = Math.max(...items.map(i=>i.id)) + 1;
   items.push({id:newId, name:nm, cat:ct, price:pr, veg:vg});
   saveItems();
   renderCats(); renderItems();
-  showNotify(nm + ' added to menu!');
+  showNotify('✓ ' + nm + ' added!');
   document.getElementById('nName').value = '';
   document.getElementById('nPrice').value = '';
 }
+
 function closeAdmin(){ document.getElementById('adminModal').classList.add('hidden'); }
 
-// ── Notification ───────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// NOTIFICATION
+// ══════════════════════════════════════════════════════════════
 function showNotify(msg){
   const el = document.getElementById('notify');
   el.textContent = msg; el.style.opacity = '1';
   clearTimeout(el._t);
-  el._t = setTimeout(()=>{ el.style.opacity='0'; }, 2000);
+  el._t = setTimeout(()=>{ el.style.opacity='0'; }, 2500);
 }
 
-// ── Close modals on overlay click ──────────────────────────
-document.getElementById('printModal').addEventListener('click', function(e){ if(e.target===this) closePrint(); });
-document.getElementById('adminModal').addEventListener('click', function(e){ if(e.target===this) closeAdmin(); });
+// ══════════════════════════════════════════════════════════════
+// EVENT LISTENERS
+// ══════════════════════════════════════════════════════════════
+document.getElementById('printModal').addEventListener('click', function(e){ 
+  if(e.target===this) closePrint(); 
+});
 
-// ── Init ───────────────────────────────────────────────────
+document.getElementById('adminModal').addEventListener('click', function(e){ 
+  if(e.target===this) closeAdmin(); 
+});
+
+// ══════════════════════════════════════════════════════════════
+// INITIALIZATION
+// ══════════════════════════════════════════════════════════════
 renderCats();
 renderItems();
 renderSummary();
